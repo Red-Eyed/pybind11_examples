@@ -53,6 +53,7 @@ if __name__ == "__main__":
                 batch_size=batch_size,
                 image_size=img_shape,
                 allchannel=True)
+
             for class_a_ex, class_b_ex in zip(batch_class_a, batch_class_b):
                 y = np.concatenate([np.array([1] * len(class_a_ex), dtype=np.uint8).reshape(-1, y_shape),
                                     np.array([0] * len(class_a_ex), dtype=np.uint8).reshape(-1, y_shape)])
@@ -78,6 +79,7 @@ if __name__ == "__main__":
             image = cv2.imread(concrete_path[0])
             accuracy = sess.run([A], feed_dict={X: image.reshape(1, -1)})[0]
 
+            print("accuracy: {}".format(accuracy))
             if accuracy > 0.5:
                 msg = "Image of class A!"
             else:
