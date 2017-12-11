@@ -7,6 +7,7 @@ from DataSetGenerator import DataSetGenerator
 if __name__ == "__main__":
     path_class_a = "/path/to/folder/with/cats"
     path_class_b = "/path/to/folder/with/dogs"
+
     tf.logging.set_verbosity("INFO")
 
     # Parameters
