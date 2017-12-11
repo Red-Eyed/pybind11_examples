@@ -11,9 +11,8 @@ if __name__ == "__main__":
 
     # Parameters
     batch_size = 64
-    learning_rate = 1e-10
+    learning_rate = 1e-7
     training_epochs = 5
-    batch_size = 100
     display_step = 1
     img_shape = (200, 200, 3)
     img_shape_flatten = np.prod(img_shape)
@@ -31,15 +30,16 @@ if __name__ == "__main__":
     A = tf.nn.sigmoid(Z, name="Prediction")
 
     loss = -Y * tf.log(A) - (1 - Y) * tf.log(1 - A)
-    cost = tf.reduce_mean(loss)
+    cost = tf.reduce_mean(loss, name="Cost")
 
     # Optimizing
-    opt = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost, name="Opt")
+    opt = tf.train.AdamOptimizer(learning_rate).minimize(cost, name="Opt")
 
     init = tf.global_variables_initializer()
 
     with tf.Session() as sess:
         sess.run(init)
+        writer = tf.summary.FileWriter("./logs/graphs", graph=tf.get_default_graph())
 
         # Training model
         for epoch in range(training_epochs):
@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
             for class_a_ex, class_b_ex in zip(batch_class_a, batch_class_b):
                 y = np.concatenate([np.array([1] * len(class_a_ex), dtype=np.uint8).reshape(-1, y_shape),
-                                    np.array([0] * len(class_a_ex), dtype=np.uint8).reshape(-1, y_shape)])
+                                    np.array([0] * len(class_b_ex), dtype=np.uint8).reshape(-1, y_shape)])
                 x = np.concatenate(
                     [class_a_ex.reshape(-1, img_shape_flatten), class_b_ex.reshape(-1, img_shape_flatten)])
 
@@ -66,6 +66,34 @@ if __name__ == "__main__":
                 avg_cost = c / len(x)
             if (epoch + 1) % display_step == 0:
                 print("Epoch: {}, cost = {}".format(epoch + 1, avg_cost))
+
+        # Testing model
+        batch_class_a = DataSetGenerator(path_class_a).get_batches_test(
+            batch_size=batch_size,
+            image_size=img_shape,
+            allchannel=True)
+
+        batch_class_b = DataSetGenerator(path_class_b).get_batches_test(
+            batch_size=batch_size,
+            image_size=img_shape,
+            allchannel=True)
+
+        accuracy = []
+        for class_a_ex, class_b_ex in zip(batch_class_a, batch_class_b):
+            y = np.concatenate([np.array([1] * len(class_a_ex), dtype=np.uint8).reshape(-1, y_shape),
+                                np.array([0] * len(class_b_ex), dtype=np.uint8).reshape(-1, y_shape)])
+            x = np.concatenate(
+                [class_a_ex.reshape(-1, img_shape_flatten), class_b_ex.reshape(-1, img_shape_flatten)])
+
+            local_acc = sess.run([A], feed_dict={X: x})[0].flatten()
+            local_acc = np.where(local_acc >= 0.5, 1, 0)
+            acc = np.sum(local_acc == y.flatten()) / len(local_acc)
+
+            accuracy.append(acc)
+
+        writer.close()
+
+        print("accuracy: {}".format(np.mean(accuracy)))
 
         # Predict
         class_a = DataSetGenerator(path_class_a).get_data_paths()
@@ -77,10 +105,9 @@ if __name__ == "__main__":
 
             concrete_path = np.random.choice(paths, 1)
             image = cv2.imread(concrete_path[0])
-            accuracy = sess.run([A], feed_dict={X: image.reshape(1, -1)})[0]
+            y_head = sess.run([A], feed_dict={X: image.reshape(1, -1)})[0]
 
-            print("accuracy: {}".format(accuracy))
-            if accuracy > 0.5:
+            if y_head > 0.5:
                 msg = "Image of class A!"
             else:
                 msg = "Image of class B!"
