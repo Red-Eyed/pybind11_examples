@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 from DataSetGenerator import DataSetGenerator
 
@@ -13,14 +14,14 @@ def init_params(nodes, prev_nodes):
 
 
 if __name__ == "__main__":
-    path_class_a = "/home/v.stupakov/Work/Projects/CalliScan/DataSet/linecutter2/dataset_lined"
-    path_class_b = "/home/v.stupakov/Work/Projects/CalliScan/DataSet/linecutter2/dataset_white"
+    path_class_a = "/path/to/folder/with/cats"
+    path_class_b = "/path/to/folder/with/dogs"
     tf.logging.set_verbosity("INFO")
 
     # Parameters
     batch_size = 128
-    learning_rate = 1e-4
-    training_epochs = 5
+    learning_rate = 1e-2
+    training_epochs = 25
     display_step = 1
     img_shape = (200, 200, 3)
     img_shape_flatten = np.prod(img_shape)
@@ -47,14 +48,14 @@ if __name__ == "__main__":
         W[l], b[l] = init_params(h_layer_shape, h_layer_shape)
 
     # Init output layer
-    W[L-1], b[L-1] = init_params(y_shape, h_layer_shape)
+    W[L - 1], b[L - 1] = init_params(y_shape, h_layer_shape)
 
     # Forward prop
     for l in range(1, L):
-        Z[l] = tf.matmul(W[l], A[l-1]) + b[l]
+        Z[l] = tf.matmul(W[l], A[l - 1]) + b[l]
         A[l] = tf.nn.sigmoid(Z[l], name="Prediction" + str(l))
 
-    loss = -Y * tf.log(A[L-1]) - (1 - Y) * tf.log(1 - A[L-1])
+    loss = -Y * tf.log(A[L - 1]) - (1 - Y) * tf.log(1 - A[L - 1])
     cost = tf.reduce_mean(loss, name="Cost")
 
     # Optimizing
@@ -67,6 +68,7 @@ if __name__ == "__main__":
         writer = tf.summary.FileWriter("./logs/graphs", graph=tf.get_default_graph())
 
         # Training model
+        costs = []
         for epoch in range(training_epochs):
             avg_cost = .0
             batch_class_a = DataSetGenerator(path_class_a).get_batches_train(
@@ -89,9 +91,12 @@ if __name__ == "__main__":
                                 feed_dict={X: x.T, Y: y.T})
 
                 avg_cost = c / len(x)
+                costs.append(avg_cost)
             if (epoch + 1) % display_step == 0:
                 print("Epoch: {}, cost = {}".format(epoch + 1, avg_cost))
 
+        plt.plot(costs)
+        plt.show()
         # Testing model
         batch_class_a = DataSetGenerator(path_class_a).get_batches_test(
             batch_size=batch_size,
@@ -110,7 +115,7 @@ if __name__ == "__main__":
             x = np.concatenate(
                 [class_a_ex.reshape(-1, img_shape_flatten), class_b_ex.reshape(-1, img_shape_flatten)])
 
-            local_acc = sess.run([A[L-1]], feed_dict={X: x.T})[0].flatten()
+            local_acc = sess.run([A[L - 1]], feed_dict={X: x.T})[0].flatten()
             local_acc = np.where(local_acc >= 0.5, 1, 0)
             acc = np.sum(local_acc == y.flatten()) / len(local_acc)
 
@@ -130,7 +135,7 @@ if __name__ == "__main__":
 
             concrete_path = np.random.choice(paths, 1)
             image = cv2.imread(concrete_path[0])
-            y_head = sess.run([A[L-1]], feed_dict={X: image.reshape(1, -1).T})[0]
+            y_head = sess.run([A[L - 1]], feed_dict={X: image.reshape(1, -1).T})[0]
 
             if y_head > 0.5:
                 msg = "Image of class A!"
