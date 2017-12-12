@@ -1,16 +1,17 @@
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt
 
 from DataSetGenerator import DataSetGenerator
 
 
 def init_params(nodes, prev_nodes):
-    W = tf.Variable(tf.random_normal(dtype=tf.float32, shape=(nodes, prev_nodes)))
-    b = tf.Variable(tf.zeros(dtype=tf.float32, shape=(nodes, 1)))
+    xavier_init = tf.to_double(tf.sqrt(2 / (prev_nodes + nodes)))
+    w = tf.Variable(tf.random_normal(mean=0.0, stddev=1.0, dtype=tf.float64, shape=(nodes, prev_nodes)) * xavier_init)
+    b = tf.Variable(tf.zeros(dtype=tf.float64, shape=(nodes, 1)))
 
-    return W, b
+    return w, b
 
 
 if __name__ == "__main__":
@@ -19,8 +20,10 @@ if __name__ == "__main__":
     tf.logging.set_verbosity("INFO")
 
     # Parameters
+    lambd = 0.001
+    alpha = 0.1
     batch_size = 128
-    learning_rate = 1e-2
+    learning_rate = 1e-4
     training_epochs = 25
     display_step = 1
     img_shape = (200, 200, 3)
@@ -30,8 +33,8 @@ if __name__ == "__main__":
     L = 6
 
     # Inputs
-    X = tf.placeholder(tf.float32, shape=(img_shape_flatten, None), name="X")
-    Y = tf.placeholder(tf.float32, shape=(y_shape, None), name="Y")
+    X = tf.placeholder(tf.float64, shape=(img_shape_flatten, None), name="X")
+    Y = tf.placeholder(tf.float64, shape=(y_shape, None), name="Y")
 
     # Weights
     W = dict()
@@ -40,6 +43,7 @@ if __name__ == "__main__":
     A = dict()
     A[0] = X
 
+    tf.set_random_seed(0)
     # Init input layer
     W[1], b[1] = init_params(h_layer_shape, img_shape_flatten)
 
@@ -55,7 +59,12 @@ if __name__ == "__main__":
         Z[l] = tf.matmul(W[l], A[l - 1]) + b[l]
         A[l] = tf.nn.sigmoid(Z[l], name="Prediction" + str(l))
 
-    loss = -Y * tf.log(A[L - 1]) - (1 - Y) * tf.log(1 - A[L - 1])
+    # L2 Regularization
+    R = 0
+    for l in range(1, L):
+        R += tf.norm(W[l])
+
+    loss = -Y * tf.log(A[L - 1]) - (1 - Y) * tf.log(1 - A[L - 1])  # + lambd * R
     cost = tf.reduce_mean(loss, name="Cost")
 
     # Optimizing
