@@ -51,6 +51,7 @@ class _DataSetGenerator:
         self.__class_name = class_name
         self.__extension = extension
         self.__data_info = self.get_data_paths()
+        np.random.shuffle(self.__data_info)
 
     def get_data_paths(self):
         img_lists = glob.glob(self.__data_dir + "/*." + self.__extension)

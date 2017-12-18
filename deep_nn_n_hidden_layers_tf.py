@@ -23,14 +23,14 @@ if __name__ == "__main__":
     lambd = 0.01
     alpha = 0.1
     batch_size = 100
-    learning_rate = 1e-6
+    learning_rate = 1e-7
     training_epochs = 10
     display_step = 1
     img_shape = (200, 200, 3)
     img_shape_flatten = np.prod(img_shape)
     h_layer_shape = 200
     y_shape = 1  # class A or B
-    L = 4
+    L = 2
 
     dataset = DataSet(batch_size=batch_size,
                       image_size=img_shape,
@@ -54,6 +54,7 @@ if __name__ == "__main__":
     A[0] = X
 
     tf.set_random_seed(0)
+    np.random.seed(0)
     # Init input layer
     W[1], b[1] = init_params(h_layer_shape, img_shape_flatten)
 
@@ -74,7 +75,7 @@ if __name__ == "__main__":
     for l in range(1, L):
         R += tf.norm(W[l])
 
-    loss = -Y * tf.log(A[L - 1]) - (1 - Y) * tf.log(1 - A[L - 1]) + lambd * R
+    loss = -Y * tf.log(A[L - 1]) - (1 - Y) * tf.log(1 - A[L - 1]) #+ lambd * R
     cost = tf.reduce_mean(loss, name="Cost")
 
     # Optimizing
@@ -100,7 +101,7 @@ if __name__ == "__main__":
                 print("Epoch: {}, cost = {}".format(epoch + 1, avg_cost))
 
         # Testing model
-        batch = dataset.get_batches_train()
+        batch = dataset.get_batches_test()
 
         accuracy = []
         for y, x in batch:
