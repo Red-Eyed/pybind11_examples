@@ -30,7 +30,7 @@ if __name__ == "__main__":
     img_shape_flatten = np.prod(img_shape)
     h_layer_shape = 200
     y_shape = 1  # class A or B
-    L = 2
+    L = 3
 
     dataset = DataSet(batch_size=batch_size,
                       image_size=img_shape,
