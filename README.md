@@ -1,4 +1,4 @@
-# machine-learning-studying
+# machine-learning-notes
 This repository was created for self studying.
 
 ## Setup Python 3.6.5 environment for Ubuntu 18.04:
