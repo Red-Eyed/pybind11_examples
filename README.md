@@ -9,11 +9,11 @@ bash Miniconda3-latest-Linux-x86_64.sh
 ```
 2. Create environment:
 ```
- conda create -n <env_name> python=3.6.5
+ conda create -n env_name python=3.7
 ```
 3. Activate environment:
 ```
-source activate <env_name>
+source activate env_name
 ```
 4. Install dependency:
 ```
@@ -22,4 +22,5 @@ nomkl numexpr cloudpickle pickleshare h5py CFFI requests beautifulsoup4 line_pro
 memory_profiler pillow tqdm lxml opencv
 ```
 5. [optional] [Installing TensorFlow on Ubuntu](https://www.tensorflow.org/install/install_linux)
-6. [optional] [Install PyCharm](https://www.jetbrains.com/pycharm/download/#section=linux)
+6. [optional] [Install PyCharm](https://www.jetbrains.com/pycharm/download/#section=linux)  
+sudo snap install pycharm-community --classic
