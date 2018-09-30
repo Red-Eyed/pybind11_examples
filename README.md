@@ -23,4 +23,4 @@ memory_profiler pillow tqdm lxml opencv
 ```
 5. [optional] [Installing TensorFlow on Ubuntu](https://www.tensorflow.org/install/install_linux)
 6. [optional] [Install PyCharm](https://www.jetbrains.com/pycharm/download/#section=linux)  
-sudo snap install pycharm-community --classic
+`sudo snap install pycharm-community --classic`
